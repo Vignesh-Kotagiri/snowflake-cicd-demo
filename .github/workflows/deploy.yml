@@ -1,1 +1,44 @@
+name: Deploy to Snowflake
+
+on:
+  push:
+    branches: [ main ]  # Triggers deployment on each push to main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SnowSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y snowflake-snowsql
+
+      - name: Run SQL scripts in Snowflake
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+        run: |
+          snowsql -a $SNOWFLAKE_ACCOUNT \
+                  -u $SNOWFLAKE_USER \
+                  -p $SNOWFLAKE_PASSWORD \
+                  -w $SNOWFLAKE_WAREHOUSE \
+                  -d $SNOWFLAKE_DATABASE \
+                  -s $SNOWFLAKE_SCHEMA \
+                  -f sql/create_table.sql
+          
+          snowsql -a $SNOWFLAKE_ACCOUNT \
+                  -u $SNOWFLAKE_USER \
+                  -p $SNOWFLAKE_PASSWORD \
+                  -w $SNOWFLAKE_WAREHOUSE \
+                  -d $SNOWFLAKE_DATABASE \
+                  -s $SNOWFLAKE_SCHEMA \
+                  -f sql/insert_data.sql
 
